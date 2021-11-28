@@ -1,0 +1,67 @@
+{
+  "name": "lyrebird",
+  "version": "0.1.0",
+  "description": "A wrapper for writing more reusable and cleaner mocks using mswjs.io.",
+  "author": "Mohammad Ataei",
+  "license": "MIT",
+  "keywords": [
+    "msw",
+    "mswjs",
+    "api",
+    "mock",
+    "mocking",
+    "worker",
+    "prototype",
+    "server",
+    "service",
+    "handler"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mammadataei/lyrebird/"
+  },
+  "bugs": {
+    "url": "https://github.com/mammadataei/lyrebird/issues"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "jest",
+    "style": "prettier --write . && pnpm lint",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx",
+    "prepare": "husky install",
+    "pre-commit": "lint-staged"
+  },
+  "lint-staged": {
+    "*.{js,ts,jsx,tsx}": "eslint --fix",
+    "*.{js,jsx,ts,tsx,md,html,css}": "prettier --write"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^15.0.0",
+    "@commitlint/config-conventional": "^15.0.0",
+    "@types/jest": "^27.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
+    "eslint": "^8.3.0",
+    "eslint-config-prettier": "^8.3.0",
+    "husky": "^7.0.0",
+    "jest": "^27.3.1",
+    "lint-staged": "^12.1.2",
+    "prettier": "2.5.0",
+    "ts-jest": "^27.0.7",
+    "tsup": "^5.10.0",
+    "typescript": "^4.5.2"
+  }
+}
