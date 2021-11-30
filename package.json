@@ -40,7 +40,7 @@
     "build": "tsup",
     "test": "jest",
     "style": "prettier --write . && pnpm lint",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "prepare": "husky install",
     "pre-commit": "lint-staged"
   },

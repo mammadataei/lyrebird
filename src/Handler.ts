@@ -2,7 +2,7 @@ import { RestHandler, RESTMethods } from 'msw'
 
 type Params = Record<string, string>
 
-export class Handler<ResponseBody = any, RequestPayload = any> {
+export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
   private method: RESTMethods = RESTMethods.GET
 
   private url?: string
@@ -75,6 +75,6 @@ function paramsMismatched(expected: Params, actual: URLSearchParams): boolean {
   return false
 }
 
-function payloadMismatched(expected: any, actual: any) {
+function payloadMismatched(expected: unknown, actual: unknown) {
   return expected && JSON.stringify(expected) !== JSON.stringify(actual)
 }
