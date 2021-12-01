@@ -1,13 +1,13 @@
 import { RestHandler, RESTMethods } from 'msw'
 
-type Params = Record<string, string>
+export type RequestParameters = Record<string, string>
 
 export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
   private method: RESTMethods = RESTMethods.GET
 
   private url?: string
 
-  private params?: Params
+  private params?: RequestParameters
 
   private responseBody?: ResponseBody
 
@@ -25,7 +25,7 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
     return this
   }
 
-  setRequestParams(params: Params) {
+  setRequestParams(params: RequestParameters) {
     this.params = params
     return this
   }
@@ -65,7 +65,10 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
   }
 }
 
-function paramsMismatched(expected: Params, actual: URLSearchParams): boolean {
+function paramsMismatched(
+  expected: RequestParameters,
+  actual: URLSearchParams,
+): boolean {
   for (const property in expected) {
     if (expected[property] !== actual.get(property)) {
       return true
