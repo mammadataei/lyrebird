@@ -40,7 +40,7 @@
     "build": "tsup",
     "test": "jest",
     "style": "prettier --write . && pnpm lint",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx .",
     "prepare": "husky install",
     "pre-commit": "lint-staged"
   },
@@ -48,17 +48,22 @@
     "*.{js,ts,jsx,tsx}": "eslint --fix",
     "*.{js,jsx,ts,tsx,md,html,css}": "prettier --write"
   },
+  "peerDependencies": {
+    "msw": "^0.35.0"
+  },
   "devDependencies": {
     "@commitlint/cli": "^15.0.0",
     "@commitlint/config-conventional": "^15.0.0",
     "@types/jest": "^27.0.3",
     "@typescript-eslint/eslint-plugin": "^5.4.0",
     "@typescript-eslint/parser": "^5.4.0",
+    "axios": "^0.24.0",
     "eslint": "^8.3.0",
     "eslint-config-prettier": "^8.3.0",
     "husky": "^7.0.0",
     "jest": "^27.3.1",
     "lint-staged": "^12.1.2",
+    "msw": "^0.35.0",
     "prettier": "2.5.0",
     "ts-jest": "^27.0.7",
     "tsup": "^5.10.0",
