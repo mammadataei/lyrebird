@@ -1,74 +1,58 @@
-import { SetupServerApi } from 'msw/node'
-import { RESTMethods, SetupWorkerApi } from 'msw'
-import { Handler, RequestParameters } from './Handler'
+import type { SetupWorkerApi } from 'msw'
+import type { SetupServerApi } from 'msw/node'
+import type { HandlerCollection } from './HandlerCollection'
+import { Handler } from './Handler'
+
+interface MockServerOptions {
+  collection: HandlerCollection
+}
 
 export class MockServer {
-  private server: SetupServerApi | SetupWorkerApi
+  private readonly server: SetupServerApi | SetupWorkerApi
 
-  private handler: Handler | null = null
+  private readonly collection?: HandlerCollection
 
-  constructor(server: SetupServerApi | SetupWorkerApi) {
+  constructor(
+    server: SetupServerApi | SetupWorkerApi,
+    options?: MockServerOptions,
+  ) {
     this.server = server
+
+    if (options) {
+      this.collection = options.collection
+    }
   }
 
-  public on(method: RESTMethods, url: string) {
-    this.getCurrentHandler().setMethod(method)
-    this.getCurrentHandler().setUrl(url)
-    return this
+  use(...handlers: Array<string> | Array<Handler>) {
+    if (Array.isArray(handlers)) {
+      handlers.forEach((handler) => {
+        if (handler instanceof Handler) {
+          return this.enableHandlerInstance(handler)
+        }
+
+        this.enableHandlerFromCollection(handler)
+      })
+    }
   }
 
-  public onGet(url: string) {
-    return this.on(RESTMethods.GET, url)
+  enable(...handlers: Array<string>) {
+    return this.use(...handlers)
   }
 
-  public onPost(url: string) {
-    return this.on(RESTMethods.POST, url)
+  private enableHandlerInstance(handler: Handler) {
+    return this.server.use(handler.run())
   }
 
-  public onPatch(url: string) {
-    return this.on(RESTMethods.PATCH, url)
-  }
-
-  public onPut(url: string) {
-    return this.on(RESTMethods.PUT, url)
-  }
-
-  public onOptions(url: string) {
-    return this.on(RESTMethods.OPTIONS, url)
-  }
-
-  public onHead(url: string) {
-    return this.on(RESTMethods.HEAD, url)
-  }
-
-  public onDelete(url: string) {
-    return this.on(RESTMethods.DELETE, url)
-  }
-
-  public withParams(params: RequestParameters) {
-    this.getCurrentHandler().setRequestParams(params)
-    return this
-  }
-
-  public withPayload<Payload>(payload: Payload) {
-    this.getCurrentHandler().setRequestPayload<Payload>(payload)
-    return this
-  }
-
-  public reply<ResponseBody>(status: number, body?: ResponseBody): void {
-    const handler = this.getCurrentHandler()
-    handler.setResponseCode(status)
-
-    if (body) {
-      handler.setResponseBody<ResponseBody>(body)
+  private enableHandlerFromCollection(handlerName: string) {
+    if (!this.collection) {
+      throw new Error(
+        '\n' +
+          `Lyrebird: Unable to find handler \`${handlerName}\` because there isn't a HandlerCollection ` +
+          `associated with the current MockServer instance. Please consider creating a HandlerCollection ` +
+          `or using an inline handler instead.`,
+      )
     }
 
-    this.server.use(handler.handle())
-    this.handler = null
-  }
-
-  private getCurrentHandler() {
-    this.handler ??= new Handler()
-    return this.handler
+    this.server.use(this.collection.find(handlerName).run())
   }
 }
