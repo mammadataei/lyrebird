@@ -9,43 +9,70 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
 
   private params?: RequestParameters
 
-  private responseBody?: ResponseBody
-
-  private responseCode = 200
-
   private requestPayload?: RequestPayload
 
-  setMethod(method: RESTMethods) {
-    this.method = method
-    return this
-  }
+  private responseStatusCode = 200
 
-  setUrl(url: string) {
+  private responseBody?: ResponseBody
+
+  name: string | null = null
+
+  public on(method: RESTMethods | keyof typeof RESTMethods, url: string) {
+    this.method = typeof method === 'string' ? RESTMethods[method] : method
     this.url = url
     return this
   }
 
-  setRequestParams(params: RequestParameters) {
+  public onGet(url: string) {
+    return this.on(RESTMethods.GET, url)
+  }
+
+  public onPost(url: string) {
+    return this.on(RESTMethods.POST, url)
+  }
+
+  public onPatch(url: string) {
+    return this.on(RESTMethods.PATCH, url)
+  }
+
+  public onPut(url: string) {
+    return this.on(RESTMethods.PUT, url)
+  }
+
+  public onOptions(url: string) {
+    return this.on(RESTMethods.OPTIONS, url)
+  }
+
+  public onHead(url: string) {
+    return this.on(RESTMethods.HEAD, url)
+  }
+
+  public onDelete(url: string) {
+    return this.on(RESTMethods.DELETE, url)
+  }
+
+  withParams(params: RequestParameters) {
     this.params = params
     return this
   }
 
-  setRequestPayload<Payload extends RequestPayload>(payload: Payload) {
+  withPayload<Payload extends RequestPayload>(payload: Payload) {
     this.requestPayload = payload
     return this as unknown as Handler<ResponseBody, Payload>
   }
 
-  setResponseCode(statusCode: number) {
-    this.responseCode = statusCode
-    return this
-  }
-
-  setResponseBody<Body extends ResponseBody>(response: Body) {
-    this.responseBody = response
+  public reply<Body extends ResponseBody>(status: number, body?: Body) {
+    this.responseStatusCode = status
+    this.responseBody = body
     return this as unknown as Handler<Body, RequestPayload>
   }
 
-  handle() {
+  as(name: string) {
+    this.name = name
+    return this
+  }
+
+  run() {
     if (!this.url) throw new Error('No url provided')
 
     return new RestHandler(this.method, this.url, (req, res, context) => {
@@ -58,7 +85,7 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
       }
 
       return res(
-        context.status(this.responseCode),
+        context.status(this.responseStatusCode),
         context.json(this.responseBody),
       )
     })

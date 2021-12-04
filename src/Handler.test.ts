@@ -9,15 +9,6 @@ beforeAll(() => server.listen())
 afterAll(() => server.close())
 afterEach(() => server.resetHandlers())
 
-it('should intercept `GET` requests by default if no method provided', async () => {
-  const handler = new Handler().setUrl('/endpoint').setResponseCode(200)
-
-  server.use(handler.handle())
-  const { status } = await axios.get('/endpoint')
-
-  expect(status).toEqual(200)
-})
-
 it.each([
   ['get', RESTMethods.GET],
   ['post', RESTMethods.POST],
@@ -32,35 +23,57 @@ it.each([
     const serverResponse = { message: 'request received successfully' }
 
     const handler = new Handler()
-      .setMethod(RESTMethod)
-      .setUrl('/endpoint')
-      .setResponseCode(200)
-      .setResponseBody(serverResponse)
+      .on(RESTMethod, '/endpoint')
+      .reply(200, serverResponse)
 
-    server.use(handler.handle())
+    server.use(handler.run())
     const { data } = await axios[method]('/endpoint')
 
     expect(data).toEqual(serverResponse)
   },
 )
 
+it.each([
+  ['onGet', 'get'],
+  ['onPost', 'post'],
+  ['onPut', 'put'],
+  ['onPatch', 'patch'],
+  ['onHead', 'head'],
+  ['onOptions', 'options'],
+  ['onDelete', 'delete'],
+] as const)('should support `%s` alias', async (alias, method) => {
+  const handler = new Handler()
+
+  handler[alias]('/endpoint').reply(200, {
+    message: 'request received successfully',
+  })
+
+  server.use(handler.run())
+  const { status } = await axios[method]('/endpoint')
+
+  expect(status).toEqual(200)
+})
+
+it('can have a name', () => {
+  const handler = new Handler().onGet('/users').reply(200).as('getAllUsers')
+
+  expect(handler.name).toEqual('getAllUsers')
+})
+
 it('should trow error if no url provided', () => {
-  const handler = new Handler().setResponseCode(200)
-  expect(() => server.use(handler.handle())).toThrowError('No url provided')
+  const handler = new Handler().reply(200, {})
+  expect(() => server.use(handler.run())).toThrowError('No url provided')
 })
 
 it('should generate an MSW RestHandler', () => {
-  const handler = new Handler().setUrl('/endpoint')
-  expect(handler.handle()).toBeInstanceOf(RestHandler)
+  const handler = new Handler().onGet('/endpoint')
+  expect(handler.run()).toBeInstanceOf(RestHandler)
 })
 
 it('should be able to create a handler with empty response body', async () => {
-  const handler = new Handler()
-    .setMethod(RESTMethods.GET)
-    .setUrl('/endpoint')
-    .setResponseCode(200)
+  const handler = new Handler().onGet('/endpoint').reply(200)
 
-  server.use(handler.handle())
+  server.use(handler.run())
   const { data } = await axios.get('/endpoint')
 
   expect(data).toEqual('')
@@ -71,19 +84,17 @@ it('should be able to create a handler with the constrained request payload', as
   type Response = { success: boolean; message: string }
 
   const handler = new Handler()
-    .setMethod(RESTMethods.POST)
-    .setUrl('/register')
-    .setRequestPayload<Request>({
+    .onPost('/register')
+    .withPayload<Request>({
       email: 'user@example.com',
       password: 'secret',
     })
-    .setResponseCode(200)
-    .setResponseBody<Response>({
+    .reply<Response>(200, {
       success: true,
       message: 'User registered successfully.',
     })
 
-  server.use(handler.handle())
+  server.use(handler.run())
 
   const { data, status } = await axios.post('/register', {
     email: 'user@example.com',
@@ -105,13 +116,11 @@ it('should be able to create a handler with the constrained request params', asy
   const serverResponse = { success: true, users: {} }
 
   const handler = new Handler()
-    .setMethod(RESTMethods.GET)
-    .setUrl('/users')
-    .setRequestParams({ admin: 'true' })
-    .setResponseCode(200)
-    .setResponseBody(serverResponse)
+    .onGet('/users')
+    .withParams({ admin: 'true' })
+    .reply(200, serverResponse)
 
-  server.use(handler.handle())
+  server.use(handler.run())
   const { data, status } = await axios.get('/users?admin=true')
 
   expect(status).toEqual(200)
