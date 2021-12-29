@@ -1,13 +1,13 @@
-import { Handler } from './Handler'
+import { RestHandler } from './RestHandler'
 
 export class HandlerCollection {
-  private collection: Map<string, Handler>
+  private collection: Map<string, RestHandler>
 
   constructor() {
-    this.collection = new Map<string, Handler>()
+    this.collection = new Map<string, RestHandler>()
   }
 
-  collect(...handlers: Array<Handler>): void {
+  collect(...handlers: Array<RestHandler>): void {
     handlers.forEach((handler) => {
       const key = handler.name
 
@@ -23,7 +23,7 @@ export class HandlerCollection {
     })
   }
 
-  find(name: string): Handler {
+  find(name: string): RestHandler {
     const handler = this.collection.get(name)
 
     if (!handler) {

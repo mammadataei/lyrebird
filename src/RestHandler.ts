@@ -1,4 +1,4 @@
-import { RestHandler, RESTMethods } from 'msw'
+import { RestHandler as MSWRestHandler, RESTMethods } from 'msw'
 import {
   AsyncResponseResolverReturnType,
   defaultContext,
@@ -24,7 +24,7 @@ type ResponseResolver<
   context: ContextType
 }) => AsyncResponseResolverReturnType<MockedResponse<BodyType>>
 
-export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
+export class RestHandler<ResponseBody = unknown, RequestPayload = unknown> {
   private method: RESTMethods = RESTMethods.GET
 
   private url?: string
@@ -82,13 +82,13 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
 
   withPayload<Payload extends RequestPayload>(payload: Payload) {
     this.requestPayload = payload
-    return this as unknown as Handler<ResponseBody, Payload>
+    return this as unknown as RestHandler<ResponseBody, Payload>
   }
 
   public reply<Body extends ResponseBody>(status: number, body?: Body) {
     this.responseStatusCode = status
     this.responseBody = body
-    return this as unknown as Handler<Body, RequestPayload>
+    return this as unknown as RestHandler<Body, RequestPayload>
   }
 
   public resolve<
@@ -114,7 +114,7 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
   run() {
     if (!this.url) throw new Error('No url provided')
 
-    return new RestHandler(
+    return new MSWRestHandler(
       this.method,
       this.url,
       (request, response, context) => {
