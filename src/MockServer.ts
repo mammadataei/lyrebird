@@ -1,7 +1,7 @@
 import type { SetupWorkerApi } from 'msw'
 import type { SetupServerApi } from 'msw/node'
 import type { HandlerCollection } from './HandlerCollection'
-import { Handler } from './Handler'
+import { RestHandler } from './RestHandler'
 
 interface MockServerOptions {
   collection: HandlerCollection
@@ -23,10 +23,10 @@ export class MockServer {
     }
   }
 
-  use(...handlers: Array<string> | Array<Handler>) {
+  use(...handlers: Array<string> | Array<RestHandler>) {
     if (Array.isArray(handlers)) {
       handlers.forEach((handler) => {
-        if (handler instanceof Handler) {
+        if (handler instanceof RestHandler) {
           return this.enableHandlerInstance(handler)
         }
 
@@ -39,7 +39,7 @@ export class MockServer {
     return this.use(...handlers)
   }
 
-  private enableHandlerInstance(handler: Handler) {
+  private enableHandlerInstance(handler: RestHandler) {
     return this.server.use(handler.run())
   }
 

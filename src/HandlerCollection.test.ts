@@ -1,8 +1,8 @@
-import { Handler } from './Handler'
+import { RestHandler } from './RestHandler'
 import { HandlerCollection } from './HandlerCollection'
 
 it('should be able to collect a single handler', () => {
-  const getAllUsersHandler = new Handler()
+  const getAllUsersHandler = new RestHandler()
     .onGet('/user')
     .reply(200)
     .as('getUsers')
@@ -14,12 +14,12 @@ it('should be able to collect a single handler', () => {
 })
 
 it('should be able to collect multiple handlers', () => {
-  const getAllUsersHandler = new Handler()
+  const getAllUsersHandler = new RestHandler()
     .onGet('/user')
     .reply(200)
     .as('getUsers')
 
-  const registrationHandler = new Handler()
+  const registrationHandler = new RestHandler()
     .onPost('/register')
     .reply(200, {
       success: true,
@@ -35,7 +35,7 @@ it('should be able to collect multiple handlers', () => {
 })
 
 it('should trow appropriate error when the handler does not have a name', () => {
-  const handlerWithoutName = new Handler().onGet('/user').reply(200)
+  const handlerWithoutName = new RestHandler().onGet('/user').reply(200)
 
   const collection = new HandlerCollection()
 

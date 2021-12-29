@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { setupServer } from 'msw/node'
-import { RestHandler, RESTMethods } from 'msw'
-import { Handler } from './Handler'
+import { RestHandler as MSWRestHandler, RESTMethods } from 'msw'
+import { RestHandler } from './RestHandler'
 
 const server = setupServer()
 
@@ -22,7 +22,7 @@ it.each([
   async (method, RESTMethod) => {
     const serverResponse = { message: 'request received successfully' }
 
-    const handler = new Handler()
+    const handler = new RestHandler()
       .on(RESTMethod, '/endpoint')
       .reply(200, serverResponse)
 
@@ -42,7 +42,7 @@ it.each([
   ['onOptions', 'options'],
   ['onDelete', 'delete'],
 ] as const)('should support `%s` alias', async (alias, method) => {
-  const handler = new Handler()
+  const handler = new RestHandler()
 
   handler[alias]('/endpoint').reply(200, {
     message: 'request received successfully',
@@ -55,23 +55,23 @@ it.each([
 })
 
 it('can have a name', () => {
-  const handler = new Handler().onGet('/users').reply(200).as('getAllUsers')
+  const handler = new RestHandler().onGet('/users').reply(200).as('getAllUsers')
 
   expect(handler.name).toEqual('getAllUsers')
 })
 
 it('should trow error if no url provided', () => {
-  const handler = new Handler().reply(200, {})
+  const handler = new RestHandler().reply(200, {})
   expect(() => server.use(handler.run())).toThrowError('No url provided')
 })
 
 it('should generate an MSW RestHandler', () => {
-  const handler = new Handler().onGet('/endpoint')
-  expect(handler.run()).toBeInstanceOf(RestHandler)
+  const handler = new RestHandler().onGet('/endpoint')
+  expect(handler.run()).toBeInstanceOf(MSWRestHandler)
 })
 
 it('should be able to create a handler with empty response body', async () => {
-  const handler = new Handler().onGet('/endpoint').reply(200)
+  const handler = new RestHandler().onGet('/endpoint').reply(200)
 
   server.use(handler.run())
   const { data } = await axios.get('/endpoint')
@@ -83,7 +83,7 @@ it('should be able to create a handler with the constrained request payload', as
   type Request = { email: string; password: string }
   type Response = { success: boolean; message: string }
 
-  const handler = new Handler()
+  const handler = new RestHandler()
     .onPost('/register')
     .withPayload<Request>({
       email: 'user@example.com',
@@ -115,7 +115,7 @@ it('should be able to create a handler with the constrained request payload', as
 it('should be able to create a handler with the constrained request params', async () => {
   const serverResponse = { success: true, users: {} }
 
-  const handler = new Handler()
+  const handler = new RestHandler()
     .onGet('/users')
     .withParams({ admin: 'true' })
     .reply(200, serverResponse)
@@ -140,7 +140,7 @@ it('should be able to create handler using a resolver callback', async () => {
     firstName: string
   }
 
-  const handler = new Handler()
+  const handler = new RestHandler()
     .onPost('/login')
     .resolve<LoginRequest, LoginResponse>(({ response, request, context }) => {
       const { username } = request.body

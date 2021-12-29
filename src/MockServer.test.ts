@@ -2,7 +2,7 @@ import axios from 'axios'
 import { setupServer } from 'msw/node'
 import { MockServer } from './MockServer'
 import { HandlerCollection } from './HandlerCollection'
-import { Handler } from './Handler'
+import { RestHandler } from './RestHandler'
 
 const mockServer = setupServer()
 
@@ -13,14 +13,14 @@ afterEach(() => mockServer.resetHandlers())
 const collection = new HandlerCollection()
 
 collection.collect(
-  new Handler()
+  new RestHandler()
     .onGet('/users')
     .reply(200, {
       users: [],
     })
     .as('getAllUsers'),
 
-  new Handler()
+  new RestHandler()
     .onPost('/register')
     .reply(200, {
       success: true,
@@ -91,7 +91,7 @@ describe('Using a collection', () => {
 describe('Using inline handlers', () => {
   it('should be able to enable an inline handler', async () => {
     server.use(
-      new Handler().onGet('/users').reply(200, {
+      new RestHandler().onGet('/users').reply(200, {
         users: [],
       }),
     )
@@ -102,13 +102,13 @@ describe('Using inline handlers', () => {
 
   it('should be able to enable multiple inline handlers', async () => {
     server.use(
-      new Handler().onGet('/users').reply(200, {
+      new RestHandler().onGet('/users').reply(200, {
         users: [],
       }),
     )
 
     server.use(
-      new Handler().onPost('/register').reply(200, {
+      new RestHandler().onPost('/register').reply(200, {
         success: true,
         message: 'users registered successfully.',
       }),
@@ -126,11 +126,11 @@ describe('Using inline handlers', () => {
 
   it('should be able to enable multiple inline handlers at once', async () => {
     server.use(
-      new Handler().onGet('/users').reply(200, {
+      new RestHandler().onGet('/users').reply(200, {
         users: [],
       }),
 
-      new Handler().onPost('/register').reply(200, {
+      new RestHandler().onPost('/register').reply(200, {
         success: true,
         message: 'users registered successfully.',
       }),
