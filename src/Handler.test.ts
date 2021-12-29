@@ -128,3 +128,42 @@ it('should be able to create a handler with the constrained request params', asy
 
   await expect(async () => await axios.get('/users')).rejects.toThrowError()
 })
+
+it('should be able to create handler using a resolver callback', async () => {
+  interface LoginRequest {
+    username: string
+    password: string
+  }
+
+  interface LoginResponse {
+    username: string
+    firstName: string
+  }
+
+  const handler = new Handler()
+    .onPost('/login')
+    .resolve<LoginRequest, LoginResponse>(({ response, request, context }) => {
+      const { username } = request.body
+
+      return response(
+        context.status(200),
+        context.json({
+          username,
+          firstName: 'John',
+        }),
+      )
+    })
+
+  server.use(handler.run())
+
+  const { data, status } = await axios.post('/login', {
+    username: 'john',
+    password: 'secret',
+  })
+
+  expect(status).toEqual(200)
+  expect(data).toEqual({
+    username: 'john',
+    firstName: 'John',
+  })
+})

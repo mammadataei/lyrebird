@@ -1,6 +1,28 @@
 import { RestHandler, RESTMethods } from 'msw'
+import {
+  AsyncResponseResolverReturnType,
+  defaultContext,
+  DefaultRequestBody,
+  MockedRequest,
+} from 'msw/lib/types/handlers/RequestHandler'
+import { MockedResponse, ResponseComposition } from 'msw/lib/types/response'
+import {
+  RequestParams,
+  RestContext,
+  RestRequest,
+} from 'msw/lib/types/handlers/RestHandler'
 
 export type RequestParameters = Record<string, string>
+
+type ResponseResolver<
+  RequestType = MockedRequest,
+  ContextType = typeof defaultContext,
+  BodyType = unknown,
+> = (props: {
+  request: RequestType
+  response: ResponseComposition<BodyType>
+  context: ContextType
+}) => AsyncResponseResolverReturnType<MockedResponse<BodyType>>
 
 export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
   private method: RESTMethods = RESTMethods.GET
@@ -14,6 +36,8 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
   private responseStatusCode = 200
 
   private responseBody?: ResponseBody
+
+  private resolver?: ResponseResolver<any, any, any>
 
   name: string | null = null
 
@@ -67,6 +91,21 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
     return this as unknown as Handler<Body, RequestPayload>
   }
 
+  public resolve<
+    RequestBodyType extends DefaultRequestBody = DefaultRequestBody,
+    ResponseBody extends DefaultRequestBody = any,
+    Params extends RequestParams = RequestParams,
+  >(
+    resolver: ResponseResolver<
+      RestRequest<RequestBodyType, Params>,
+      RestContext,
+      ResponseBody
+    >,
+  ) {
+    this.resolver = resolver
+    return this
+  }
+
   as(name: string) {
     this.name = name
     return this
@@ -75,20 +114,31 @@ export class Handler<ResponseBody = unknown, RequestPayload = unknown> {
   run() {
     if (!this.url) throw new Error('No url provided')
 
-    return new RestHandler(this.method, this.url, (req, res, context) => {
-      if (this.params && paramsMismatched(this.params, req.url.searchParams)) {
-        return res.networkError('Params mismatch.')
-      }
+    return new RestHandler(
+      this.method,
+      this.url,
+      (request, response, context) => {
+        if (this.resolver) {
+          return this.resolver({ request, response, context })
+        }
 
-      if (payloadMismatched(this.requestPayload, req.body)) {
-        return res.networkError('Payload mismatch.')
-      }
+        if (
+          this.params &&
+          paramsMismatched(this.params, request.url.searchParams)
+        ) {
+          return response.networkError('Params mismatch.')
+        }
 
-      return res(
-        context.status(this.responseStatusCode),
-        context.json(this.responseBody),
-      )
-    })
+        if (payloadMismatched(this.requestPayload, request.body)) {
+          return response.networkError('Payload mismatch.')
+        }
+
+        return response(
+          context.status(this.responseStatusCode),
+          context.json(this.responseBody),
+        )
+      },
+    )
   }
 }
 
