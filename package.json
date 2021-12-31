@@ -1,6 +1,6 @@
 {
   "name": "lyrebird",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A wrapper for writing more reusable and cleaner mocks using mswjs.io.",
   "author": "Mohammad Ataei",
   "license": "MIT",
